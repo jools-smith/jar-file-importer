@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<products xmlns="urn:com.macrovision:flexnet/operations/exportimport">
+<product>
+<productName><![CDATA[TS Bundle A]]></productName>
+<version><![CDATA[Demo]]></version>
+<state>Draft</state>
+<features>
+<feature>
+<primaryKeys>
+<name><![CDATA[Unused]]></name>
+<version><![CDATA[0]]></version>
+</primaryKeys>
+<count>1</count>
+</feature>
+</features>
+<categoryAttributes>
+<categoryAttribute>
+<attributeName><![CDATA[BUNDLES]]></attributeName>
+<attributeValue><![CDATA[]]></attributeValue>
+</categoryAttribute>
+<categoryAttribute>
+<attributeName><![CDATA[SKUS]]></attributeName>
+<attributeValue><![CDATA[REVENERA-0001;REVENERA-0002;REVENERA-0003;REVENERA-0004]]></attributeValue>
+</categoryAttribute>
+</categoryAttributes>
+</product>
+<product>
+<productName><![CDATA[TS Bundle B]]></productName>
+<version><![CDATA[Demo]]></version>
+<state>Draft</state>
+<features>
+<feature>
+<primaryKeys>
+<name><![CDATA[Unused]]></name>
+<version><![CDATA[0]]></version>
+</primaryKeys>
+<count>1</count>
+</feature>
+</features>
+<categoryAttributes>
+<categoryAttribute>
+<attributeName><![CDATA[BUNDLES]]></attributeName>
+<attributeValue><![CDATA[BUNDLE-0001]]></attributeValue>
+</categoryAttribute>
+<categoryAttribute>
+<attributeName><![CDATA[SKUS]]></attributeName>
+<attributeValue><![CDATA[REVENERA-0005;REVENERA-0006;REVENERA-0007;REVENERA-0008]]></attributeValue>
+</categoryAttribute>
+</categoryAttributes>
+</product>
+</products>
