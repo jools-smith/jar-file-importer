@@ -3,7 +3,7 @@ import argparse
 from openpyxl import load_workbook
 
 from XMLBuilder import XMLBuilder
-from schema_main import SchemaField, SchemaEntity, Schema
+from schema import SchemaField, SchemaEntity, Schema
 
 parser = argparse.ArgumentParser(
     description="Process bundled product definitions spreadsheet"
