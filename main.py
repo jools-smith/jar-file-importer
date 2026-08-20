@@ -1,4 +1,6 @@
 import argparse
+import subprocess
+import os
 
 from openpyxl import load_workbook
 
@@ -14,17 +16,17 @@ parser.add_argument("-e", "--export", dest="export_file", required=True, help="e
 
 args = parser.parse_args()
 
-
-print(f"Using import file {args.import_file}")
-print(f"export to {args.export_file}")
+subprocess.run("cls", shell=True)
+subprocess.run(f"@echo Using import file {args.import_file}", shell=True)
+subprocess.run(f"@echo export to {args.export_file}", shell=True)
 
 ## column names
-product_name = SchemaField("productName", True)
-product_version = SchemaField("productVersion", True)
-state = SchemaField("state", True)
-feature_name = SchemaField("featureName", True)
-feature_version = SchemaField("featureVersion", True)
-feature_count = SchemaField("featureCount", True)
+product_name = SchemaField("productName")
+product_version = SchemaField("productVersion")
+state = SchemaField("state")
+feature_name = SchemaField("featureName")
+feature_version = SchemaField("featureVersion")
+feature_count = SchemaField("featureCount")
 skus = SchemaField("skus", False)
 bundles = SchemaField("bundles", False)
 
@@ -45,7 +47,7 @@ schema = Schema(
 work_sheet = load_workbook(args.import_file).active
 
 headers = schema.validate_sheet(work_sheet)
-print(headers)
+print(f'columns \n\t{"\n\t".join(headers)}')
 
 current = None
 entities: list[SchemaEntity] = []
@@ -80,6 +82,8 @@ xml = XMLBuilder()
 xml.initialize("products")
 
 for ent in entities:
+    print(ent.get_value(product_name))
+
     xml.push_tag("product")
     xml.push_cdata("productName", ent.get_value(product_name))
     xml.push_cdata("productVersion", ent.get_value(product_version))
