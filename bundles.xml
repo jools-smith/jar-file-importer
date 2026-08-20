@@ -3,15 +3,15 @@
 <products xmlns="urn:com.macrovision:flexnet/operations/exportimport">
 <product>
 <productName><![CDATA[TS Bundle A]]></productName>
-<version><![CDATA[Demo]]></version>
-<state>Draft</state>
+<productVersion><![CDATA[Demo]]></productVersion>
+<state><![CDATA[REVENERA-0001]]></state>
 <features>
 <feature>
 <primaryKeys>
 <name><![CDATA[Unused]]></name>
-<version><![CDATA[0]]></version>
+<version><![CDATA[1]]></version>
 </primaryKeys>
-<count>1</count>
+<count><![CDATA[1]]></count>
 </feature>
 </features>
 <categoryAttributes>
@@ -27,15 +27,15 @@
 </product>
 <product>
 <productName><![CDATA[TS Bundle B]]></productName>
-<version><![CDATA[Demo]]></version>
-<state>Draft</state>
+<productVersion><![CDATA[Demo]]></productVersion>
+<state><![CDATA[REVENERA-0005]]></state>
 <features>
 <feature>
 <primaryKeys>
 <name><![CDATA[Unused]]></name>
-<version><![CDATA[0]]></version>
+<version><![CDATA[1]]></version>
 </primaryKeys>
-<count>1</count>
+<count><![CDATA[1]]></count>
 </feature>
 </features>
 <categoryAttributes>
@@ -46,6 +46,30 @@
 <categoryAttribute>
 <attributeName><![CDATA[SKUS]]></attributeName>
 <attributeValue><![CDATA[REVENERA-0005;REVENERA-0006;REVENERA-0007;REVENERA-0008]]></attributeValue>
+</categoryAttribute>
+</categoryAttributes>
+</product>
+<product>
+<productName><![CDATA[TS Bundle C]]></productName>
+<productVersion><![CDATA[Demo]]></productVersion>
+<state><![CDATA[None]]></state>
+<features>
+<feature>
+<primaryKeys>
+<name><![CDATA[Unused]]></name>
+<version><![CDATA[1]]></version>
+</primaryKeys>
+<count><![CDATA[1]]></count>
+</feature>
+</features>
+<categoryAttributes>
+<categoryAttribute>
+<attributeName><![CDATA[BUNDLES]]></attributeName>
+<attributeValue><![CDATA[BUNDLE-0001;BUNDLE-0002]]></attributeValue>
+</categoryAttribute>
+<categoryAttribute>
+<attributeName><![CDATA[SKUS]]></attributeName>
+<attributeValue><![CDATA[]]></attributeValue>
 </categoryAttribute>
 </categoryAttributes>
 </product>
