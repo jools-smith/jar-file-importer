@@ -1,5 +1,15 @@
+from dataclasses import dataclass
 
-from openpyxl import load_workbook
+#TODO: push field defs into Field/Schema to mmake more configurable
+@dataclass(frozen=True)
+class Field:
+    name: str
+    required: bool = True
+
+@dataclass(frozen=True)
+class WorkbookSchema:
+    name: str
+    fields: list[Field]
 
 class Bundle:
     product_name = "productName"
