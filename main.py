@@ -2,7 +2,7 @@ import argparse
 
 from openpyxl import load_workbook
 
-from XMLBuilder import XMLBuilder
+from xml_builder import XMLBuilder
 from schema import SchemaField, SchemaEntity, Schema
 
 parser = argparse.ArgumentParser(

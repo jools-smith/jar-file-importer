@@ -1,11 +1,14 @@
+from dataclasses import dataclass, field
+
+
+@dataclass
 class XMLBuilder:
     namespace = "urn:com.macrovision:flexnet/operations/exportimport"
     encoding = "UTF-8"
     version = "1.0"
 
-    def __init__(self):
-        self.buffer = []
-        self.tags = []
+    buffer: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def new_line(self):
         self.buffer.append("\n")
