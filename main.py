@@ -1,12 +1,14 @@
 import argparse
 import subprocess
-import os
+from contextlib import closing
 
+import openpyxl
 from openpyxl import load_workbook
 
-from xml_builder import XMLBuilder
 from schema import SchemaField, SchemaEntity, Schema
+from xml_builder import XMLBuilder
 
+## ARGS
 parser = argparse.ArgumentParser(
     description="Process bundled product definitions spreadsheet"
 )
@@ -20,7 +22,8 @@ subprocess.run("cls", shell=True)
 subprocess.run(f"@echo Using import file {args.import_file}", shell=True)
 subprocess.run(f"@echo export to {args.export_file}", shell=True)
 
-## column names
+# MAIN
+
 product_name = SchemaField("productName")
 product_version = SchemaField("productVersion")
 state = SchemaField("state")
@@ -31,9 +34,9 @@ skus = SchemaField("skus", False)
 bundles = SchemaField("bundles", False)
 
 ## schema definition
-schema = Schema(
-    name = "bundle",
-    fields = [
+bundle_schema = Schema(
+    name="bundle",
+    fields=[
         product_name,
         product_version,
         state,
@@ -43,40 +46,49 @@ schema = Schema(
         skus,
         bundles])
 
+def process_work_book() -> list[SchemaEntity]:
+    current = None
+    local_entities: list[SchemaEntity] = []
 
-work_sheet = load_workbook(args.import_file).active
+    with closing(load_workbook(args.import_file, read_only=True)) as work_book:
+        work_sheet = work_book.active
 
-headers = schema.validate_sheet(work_sheet)
-print(f'columns \n\t{"\n\t".join(headers)}')
+        headers = bundle_schema.validate_sheet(work_sheet)
+        ##DEBUG
+        print(f'columns \n\t{"\n\t".join(headers)}')
 
-current = None
-entities: list[SchemaEntity] = []
+        # Process data rows
+        for row_num, row in enumerate(
+                work_sheet.iter_rows(min_row=2, values_only=True),
+                start=2):
 
-# Process data rows
-for row_num, row in enumerate(
-        work_sheet.iter_rows(min_row=2, values_only=True),
-        start=2):
+            record = dict(zip(headers, row))
+            # print(record)
+            if not Schema.row_is_empty(record):
+                ## not a blank row
+                if current is None or (
+                        record[product_name.name] and record[product_name.name] != current.get_value(product_name)):
 
-    record = dict(zip(headers, row))
-    # print(record)
-    if Schema.row_is_empty(record):
-        continue
+                    current = bundle_schema.create_entity(record, row_num)
 
-    if (current is None) or (record[product_name.name] and record[product_name.name] != current.get_value(product_name)):
+                    local_entities.append(current)
+                else:
+                    current.validate_matching(record, row_num)
 
-        current = schema.create_entity(record, row_num)
+                if record[skus.name]:
+                    current.append_value(skus, record[skus.name])
 
-        entities.append(current)
-    else:
-        current.validate_matching(record, row_num)
+                if record[bundles.name]:
+                    current.append_value(bundles, record[bundles.name])
 
-    if record[skus.name]:
-        current.append_value(skus, record[skus.name])
+        return local_entities
 
-    if record[bundles.name]:
-        current.append_value(bundles, record[bundles.name])
+
+
+
 
 ## generate XML
+entities = process_work_book()
 
 xml = XMLBuilder()
 xml.initialize("products")
