@@ -84,9 +84,6 @@ def process_work_book() -> list[SchemaEntity]:
         return local_entities
 
 
-
-
-
 ## generate XML
 entities = process_work_book()
 
@@ -98,7 +95,7 @@ for ent in entities:
 
     xml.push_tag("product")
     xml.push_cdata("productName", ent.get_value(product_name))
-    xml.push_cdata("productVersion", ent.get_value(product_version))
+    xml.push_cdata("version", ent.get_value(product_version))
     xml.push_cdata("state", ent.get_value(state))
     xml.push_tags("features", "feature", "primaryKeys")
     xml.push_cdata("name", ent.get_value(feature_name))
