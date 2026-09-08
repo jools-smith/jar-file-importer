@@ -1,7 +1,6 @@
-from abc import ABC
 from dataclasses import dataclass
 
-from schema import Schema, SchemaField, SchemaEntity
+from schema import Schema, SchemaField
 from xml_builder import XMLBuilder
 
 
