@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<importFulfillments xmlns="urn:com.macrovision:flexnet/operations/exportimport">
+<fulfillmentRecord>
+<fulfillmentId><![CDATA[FID_537896f0_f106_4464_8c9c_8c2c5b47971c]]></fulfillmentId>
+<migrationId></migrationId>
+<lifecycleInfo>
+<fulfillAction></fulfillAction>
+</lifecycleInfo>
+<param>
+<name><![CDATA[Comment]]></name>
+<value><![CDATA[Test activation]]></value>
+</param>
+<param>
+<name><![CDATA[HCLTech_Email]]></name>
+<value><![CDATA[nancy.joyce@hcltech.com]]></value>
+</param>
+<param>
+<name><![CDATA[HCLTech_Representative]]></name>
+<value><![CDATA[Nancy Joyce]]></value>
+</param>
+<param>
+<name><![CDATA[Order_Number]]></name>
+<value><![CDATA[254111111]]></value>
+</param>
+<param>
+<name><![CDATA[Product_Name]]></name>
+<value><![CDATA[DEG]]></value>
+</param>
+<param>
+<name><![CDATA[Product_Version]]></name>
+<value><![CDATA[5.6]]></value>
+</param>
+<param>
+<name><![CDATA[Sales_Contact_Email]]></name>
+<value></value>
+</param>
+<startDate><![CDATA[2025-06-04 00:00:00]]></startDate>
+<licenseFiles>
+<licenseFile>
+<licenseDefinitionName><![CDATA[License]]></licenseDefinitionName>
+<license><![CDATA[????????]]></license>
+</licenseFile>
+</licenseFiles>
+<licenseFilenames>
+<licenseFilename>
+<licenseDefinitionName><![CDATA[License]]></licenseDefinitionName>
+<licfilename><![CDATA[LicenseFile.lic]]></licfilename>
+</licenseFilename>
+</licenseFilenames>
+</fulfillmentRecord>
+</importFulfillments>
