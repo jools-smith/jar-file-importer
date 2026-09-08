@@ -23,11 +23,18 @@ subprocess.run("cls", shell=True)
 subprocess.run(f"@echo Using import file {args.import_file}", shell=True)
 subprocess.run(f"@echo export to {args.export_file}", shell=True)
 
-bundles = bundle.Bundle()
+# bundles = bundle.Bundle()
+#
+# bundles.process_work_book(args.import_file)
+#
+# xml = bundles.process_entities()
 
-bundles.process_work_book(args.import_file)
 
-xml = bundles.process_entities()
+fulfilments = fulfilment.Fulfilment()
+
+fulfilments.process_work_book(args.import_file)
+
+xml = fulfilments.process_entities()
 
 with open(args.export_file, "w", encoding="utf-8") as f:
     f.write(xml.text())

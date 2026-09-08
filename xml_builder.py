@@ -42,6 +42,9 @@ class XMLBuilder:
     def push_cdata(self, tag, value):
         self.push_value(tag, f'<![CDATA[{value}]]>')
 
+    def push_empty(self, tag):
+        self.push_value(tag, "")
+
     def push_value(self, tag, value):
         self.buffer.append(f'<{tag}>{value}</{tag}>')
         self.new_line()

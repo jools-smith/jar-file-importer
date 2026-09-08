@@ -65,44 +65,66 @@ class Fulfilment(Schema):
 
             if not Schema.row_is_empty(record):
 
-                current = self.create_entity_with_required_fields(record, row_num)
+                current = self.create_entity_with_all_fields(record, row_num)
 
                 self.entities.append(current)
 
             #end if not Schema.row_is_empty(record):
         #end for row_num
 
-    def process_entities(self):
-        xml = XMLBuilder()
-        xml.initialize("products")
+    @staticmethod
+    def process_attribute(xml, att_name, att_value):
+        print(att_name, att_value)
+        xml.push_tag("param")
+        xml.push_cdata("name", att_name)
+        if att_value:
+            xml.push_cdata("value", att_value)
+        else:
+            xml.push_empty("value")
+        xml.pop_tag("param")
 
+    @staticmethod
+    def process_attribute_name(xml, ent, attribute):
+        xml.push_cdata(attribute.name, ent.get_value(attribute))
+
+    def process_entities(self) -> XMLBuilder:
+        xml = XMLBuilder()
+        xml.initialize("importFulfillments")
+        ##TODO needs completing
         for ent in self.entities:
             print(ent.get_value(self.fulfilment_id))
-            #
-            # xml.push_tag("product")
-            # xml.push_cdata("productName", ent.get_value(self.product_name))
-            # xml.push_cdata("version", ent.get_value(self.product_version))
-            # xml.push_cdata("state", ent.get_value(self.state))
-            # xml.push_tags("features", "feature", "primaryKeys")
-            # xml.push_cdata("name", ent.get_value(self.feature_name))
-            # xml.push_cdata("version", ent.get_value(self.feature_version))
-            # xml.pop_tag("primaryKeys")
-            # xml.push_cdata("count", ent.get_value(self.feature_count))
-            # xml.pop_tag("features")
-            # xml.push_tags("categoryAttributes")
-            #
-            # if ent.has_value(self.bundles):
-            #     xml.push_tags("categoryAttribute")
-            #     xml.push_cdata("attributeName", "BUNDLES")
-            #     xml.push_cdata("attributeValue", ";".join(ent.get_value(self.bundles)))
-            #     xml.pop_tag("categoryAttribute")
-            #
-            # if ent.has_value(self.skus):
-            #     xml.push_tags("categoryAttribute")
-            #     xml.push_cdata("attributeName", "SKUS")
-            #     xml.push_cdata("attributeValue", ";".join(ent.get_value(self.skus)))
-            #     xml.pop_tag("categoryAttribute")
-            #
-            # xml.pop_tag("product")
 
-        # xml.pop_tag("products")
+            xml.push_tag("fulfillmentRecord")
+            self.process_attribute_name(xml, ent, self.fulfilment_id)
+            xml.push_empty("migrationId")
+
+            xml.push_tags("lifecycleInfo")
+            xml.push_empty("fulfillAction")
+            xml.pop_tag("lifecycleInfo")
+
+            ## attributes
+            for name in [
+                self.att_comment,
+                self.att_hcltech_email,
+                self.att_hcltech_representative,
+                self.att_order_number,
+                self.att_product_name,
+                self.att_product_version,
+                self.att_sales_contact_email]:
+                ## inject value
+                self.process_attribute(xml, name.name, ent.get_value(name))
+
+            self.process_attribute_name(xml, ent, self.start_date)
+            xml.push_tags("licenseFiles", "licenseFile")
+            self.process_attribute_name(xml, ent, self.license_file_definition_name)
+            self.process_attribute_name(xml, ent, self.license)
+            xml.pop_tag("licenseFiles")
+
+            xml.push_tags("licenseFilenames", "licenseFilename")
+            self.process_attribute_name(xml, ent, self.license_file_definition_name)
+            self.process_attribute_name(xml, ent, self.license_filename)
+            xml.pop_tag("licenseFilenames")
+
+        xml.pop_tag("importFulfillments")
+
+        return xml
