@@ -5,6 +5,8 @@ from typing import Any
 
 from openpyxl import load_workbook
 
+from xml_builder import XMLBuilder
+
 
 @dataclass(frozen=True)
 class SchemaField:
@@ -65,7 +67,7 @@ class Schema(ABC):
         pass
 
     @abstractmethod
-    def process_entities(self):
+    def process_entities(self) -> XMLBuilder:
         pass
 
     @staticmethod
