@@ -1,5 +1,9 @@
-from dataclasses import dataclass
+from abc import abstractmethod, ABC
+from contextlib import closing
+from dataclasses import dataclass, field
 from typing import Any
+
+from openpyxl import load_workbook
 
 
 @dataclass(frozen=True)
@@ -47,9 +51,22 @@ class SchemaEntity:
 
 
 @dataclass(frozen=True)
-class Schema:
+class Schema(ABC):
     name: str
     fields: list[SchemaField]
+    entities: list[Any] = field(default_factory=list)
+
+    def process_work_book(self, filename):
+        with closing(load_workbook(filename, read_only=True)) as work_book:
+            self.process_worksheet(work_book.active)
+
+    @abstractmethod
+    def process_worksheet(self, work_sheet):
+        pass
+
+    @abstractmethod
+    def process_entities(self):
+        pass
 
     @staticmethod
     def row_is_empty(row):
@@ -109,7 +126,7 @@ class Schema:
         if missing:
             raise ValueError(f"Missing required field(s) at row {row_num}: {', '.join(missing)}")
 
-    def create_entity(self, record, row_num) -> SchemaEntity:
+    def create_entity_with_required_fields(self, record, row_num) -> SchemaEntity:
         self.validate_required_fields(record, row_num)
 
         create_dict = lambda keys: {k: record[k] for k in keys }
@@ -117,3 +134,12 @@ class Schema:
         return SchemaEntity(
             schema=self,
             fields = create_dict(self.get_required_field_names()))
+
+    def create_entity_with_all_fields(self, record, row_num) -> SchemaEntity:
+        self.validate_required_fields(record, row_num)
+
+        create_dict = lambda keys: {k: record[k] for k in keys }
+
+        return SchemaEntity(
+            schema=self,
+            fields = create_dict(self.get_field_names()))
