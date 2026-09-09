@@ -4,6 +4,8 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/bundles.xml" />
+      <excludeFolder url="file://$MODULE_DIR$/actual-bundles.xml" />
+      <excludeFolder url="file://$MODULE_DIR$/fulfilments.xml" />
     </content>
     <orderEntry type="jdk" jdkName="C:\Working\python\Bundler\.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
