@@ -49,7 +49,7 @@ class Fulfilment(Schema):
             ]
         )
 
-    def process_worksheet(self, work_sheet):
+    def process_worksheet(self, work_sheet) -> Schema:
 
         headers = self.validate_sheet(work_sheet)
         ##DEBUG
@@ -70,6 +70,7 @@ class Fulfilment(Schema):
 
             #end if not Schema.row_is_empty(record):
         #end for row_num
+        return self
 
     @staticmethod
     def process_attribute(xml, att_name, att_value):

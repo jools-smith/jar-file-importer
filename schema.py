@@ -58,12 +58,12 @@ class Schema(ABC):
     fields: list[SchemaField]
     entities: list[Any] = field(default_factory=list)
 
-    def process_work_book(self, filename):
+    def process_work_book(self, filename) -> Schema:
         with closing(load_workbook(filename, read_only=True)) as work_book:
-            self.process_worksheet(work_book.active)
+            return self.process_worksheet(work_book.active)
 
     @abstractmethod
-    def process_worksheet(self, work_sheet):
+    def process_worksheet(self, work_sheet) -> Schema:
         pass
 
     @abstractmethod

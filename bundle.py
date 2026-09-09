@@ -31,7 +31,7 @@ class Bundle(Schema):
             ]
         )
 
-    def process_worksheet(self, work_sheet):
+    def process_worksheet(self, work_sheet) -> Schema:
         current = None
         # local_entities: list[SchemaEntity] = []
 
@@ -64,6 +64,7 @@ class Bundle(Schema):
                     current.append_value(self.bundles, record[self.bundles.name])
             #end if not Schema.row_is_empty(record):
         #end for row_num
+        return self
 
     def process_entities(self) -> XMLBuilder:
         xml = XMLBuilder()
