@@ -51,6 +51,22 @@ class SchemaEntity:
                     f"but current bundle has '{current_value}'"
                 )
 
+@dataclass(frozen=True)
+class RecordWrapper:
+    row: dict[Any,Any]
+
+    def get_row(self) -> dict[Any,Any]:
+        return self.row
+
+
+    def has(self, field: SchemaField) -> bool:
+        return self.row[field.name]
+
+    def get(self, field: SchemaField) -> Any:
+        return self.row[field.name]
+
+    def is_empty(self):
+        return all(cell is None or str(cell).strip() == "" for cell in self.row)
 
 @dataclass(frozen=True)
 class Schema(ABC):
@@ -83,6 +99,11 @@ class Schema(ABC):
 
     def get_field_names(self):
         return [f.name for f in self.fields]
+
+    # def get_field_definition(self, record, row_num, field):
+    #     name = field.name
+    #     val = str(record.get(name))
+    #     return name,val
 
     def validate_sheet(self, sheet):
 
@@ -127,6 +148,21 @@ class Schema(ABC):
 
         if missing:
             raise ValueError(f"Missing required field(s) at row {row_num}: {', '.join(missing)}")
+
+    def assert_field_exists(self, record, row_num, field):
+        if not Schema.has_value(record.get(field.name)):
+            raise ValueError(f"Missing required {field.name} at row {row_num}")
+
+    def assert_field_numeric(self, record, row_num, field):
+        self.assert_field_exists(record, row_num, field)
+
+        val = str(record.get(field.name))
+
+        if not val.isnumeric():
+            raise ValueError(f"at row {row_num} - {field.name}({val}) is not numeric")
+
+        if int(val) < 1:
+            raise ValueError(f"at row {row_num} - {field.name}({val}) must be greater than zero")
 
     def create_entity_with_required_fields(self, record, row_num) -> SchemaEntity:
         self.validate_required_fields(record, row_num)

@@ -1,10 +1,11 @@
 from abc import ABC
 from dataclasses import dataclass
+from typing import final
 
-from schema import Schema, SchemaField, SchemaEntity
+from schema import Schema, SchemaField, SchemaEntity, RecordWrapper
 from xml_builder import XMLBuilder
 
-
+@final
 @dataclass(frozen=True)
 class Bundle(Schema):
     product_name = SchemaField("productName")
@@ -14,20 +15,24 @@ class Bundle(Schema):
     feature_version = SchemaField("featureVersion")
     feature_count = SchemaField("featureCount")
     skus = SchemaField("skus", False)
+    skus_count = SchemaField("skuCount", False)
     bundles = SchemaField("bundles", False)
+    bundles_count = SchemaField("bundleSkuCount", False)
 
     def __init__(self):
         super().__init__(
             name = "bundle",
             fields = [
-                self.product_name,
-                self.product_version,
-                self.state,
-                self.feature_name,
-                self.feature_version,
-                self.feature_count,
-                self.skus,
-                self.bundles
+                Bundle.product_name,
+                Bundle.product_version,
+                Bundle.state,
+                Bundle.feature_name,
+                Bundle.feature_version,
+                Bundle.feature_count,
+                Bundle.skus,
+                Bundle.skus_count,
+                Bundle.bundles,
+                Bundle.bundles_count
             ]
         )
 
@@ -44,24 +49,38 @@ class Bundle(Schema):
                 work_sheet.iter_rows(min_row=2, values_only=True),
                 start=2):
 
-            record = dict(zip(headers, row))
+            row = RecordWrapper(dict(zip(headers, row)))
+
             # print(record)
-            if not Schema.row_is_empty(record):
+            if not row.is_empty():
                 ## not a blank row
                 if current is None or (
-                        record[self.product_name.name] and record[self.product_name.name] != current.get_value(self.product_name)):
+                        row.has(Bundle.product_name) and row.get(Bundle.product_name) != current.get_value(Bundle.product_name)):
 
-                    current = self.create_entity_with_required_fields(record, row_num)
+                    current = self.create_entity_with_required_fields(row.get_row(), row_num)
 
                     self.entities.append(current)
                 else:
-                    current.validate_matching(record, row_num)
+                    current.validate_matching(row.get_row(), row_num)
 
-                if record[self.skus.name]:
-                    current.append_value(self.skus, record[self.skus.name])
 
-                if record[self.bundles.name]:
-                    current.append_value(self.bundles, record[self.bundles.name])
+                if row.has(Bundle.skus):
+                    self.assert_field_numeric(row.get_row(), row_num, Bundle.skus_count)
+
+                    current.append_value(Bundle.skus,f"{row.get(Bundle.skus)}:{row.get(Bundle.skus_count)}")
+                else:
+                    if row.has(Bundle.skus_count):
+                        raise ValueError(
+                            f"at row {row_num} - {Bundle.skus_count.name}({row.get(Bundle.skus_count)}) should not be defined")
+
+                if row.has(Bundle.bundles):
+                    self.assert_field_numeric(row.get_row(), row_num, Bundle.skus_count)
+                    current.append_value(Bundle.bundles, f"{row.get(Bundle.bundles)}:{row.get(Bundle.bundles_count)}")
+                else:
+                    if row.has(Bundle.bundles_count):
+                        raise ValueError(
+                            f"at row {row_num} - {Bundle.bundles_count.name}({row.get(Bundle.bundles_count)}) should not be defined")
+
             #end if not Schema.row_is_empty(record):
         #end for row_num
         return self
@@ -71,30 +90,30 @@ class Bundle(Schema):
         xml.initialize("products")
 
         for ent in self.entities:
-            print(ent.get_value(self.product_name))
+            print(ent.get_value(Bundle.product_name))
 
             xml.push_tag("product")
-            xml.push_cdata("productName", ent.get_value(self.product_name))
-            xml.push_cdata("version", ent.get_value(self.product_version))
-            xml.push_cdata("state", ent.get_value(self.state))
+            xml.push_cdata("productName", ent.get_value(Bundle.product_name))
+            xml.push_cdata("version", ent.get_value(Bundle.product_version))
+            xml.push_cdata("state", ent.get_value(Bundle.state))
             xml.push_tags("features", "feature", "primaryKeys")
-            xml.push_cdata("name", ent.get_value(self.feature_name))
-            xml.push_cdata("version", ent.get_value(self.feature_version))
+            xml.push_cdata("name", ent.get_value(Bundle.feature_name))
+            xml.push_cdata("version", ent.get_value(Bundle.feature_version))
             xml.pop_tag("primaryKeys")
-            xml.push_cdata("count", ent.get_value(self.feature_count))
+            xml.push_cdata("count", ent.get_value(Bundle.feature_count))
             xml.pop_tag("features")
             xml.push_tags("categoryAttributes")
 
-            if ent.has_value(self.bundles):
+            if ent.has_value(Bundle.bundles):
                 xml.push_tags("categoryAttribute")
                 xml.push_cdata("attributeName", "BUNDLES")
-                xml.push_cdata("attributeValue", ";".join(ent.get_value(self.bundles)))
+                xml.push_cdata("attributeValue", ";".join(ent.get_value(Bundle.bundles)))
                 xml.pop_tag("categoryAttribute")
 
-            if ent.has_value(self.skus):
+            if ent.has_value(Bundle.skus):
                 xml.push_tags("categoryAttribute")
                 xml.push_cdata("attributeName", "SKUS")
-                xml.push_cdata("attributeValue", ";".join(ent.get_value(self.skus)))
+                xml.push_cdata("attributeValue", ";".join(ent.get_value(Bundle.skus)))
                 xml.pop_tag("categoryAttribute")
 
             xml.pop_tag("product")

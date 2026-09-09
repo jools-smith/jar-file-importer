@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from typing import final
 
 from schema import Schema, SchemaField
 from xml_builder import XMLBuilder
 
-
+@final
 @dataclass(frozen=True)
 class Fulfilment(Schema):
     fulfilment_id = SchemaField("fulfillmentId")
@@ -29,28 +30,27 @@ class Fulfilment(Schema):
         super().__init__(
             name = "fulfilment",
             fields = [
-                self.fulfilment_id,
-                self.activation_id,
-                self.activation_count,
-                self.overdraft_count,
-                self.start_date,
-                self.fulfilment_date_time,
-                self.license_file_definition_name,
-                self.license,
-                self.license_filename,
+                Fulfilment.fulfilment_id,
+                Fulfilment.activation_id,
+                Fulfilment.activation_count,
+                Fulfilment.overdraft_count,
+                Fulfilment.start_date,
+                Fulfilment.fulfilment_date_time,
+                Fulfilment.license_file_definition_name,
+                Fulfilment.license,
+                Fulfilment.license_filename,
                 ### attributes
-                self.att_comment,
-                self.att_hcltech_email,
-                self.att_hcltech_representative,
-                self.att_order_number,
-                self.att_product_name,
-                self.att_product_version,
-                self.att_sales_contact_email
+                Fulfilment.att_comment,
+                Fulfilment.att_hcltech_email,
+                Fulfilment.att_hcltech_representative,
+                Fulfilment.att_order_number,
+                Fulfilment.att_product_name,
+                Fulfilment.att_product_version,
+                Fulfilment.att_sales_contact_email
             ]
         )
 
     def process_worksheet(self, work_sheet) -> Schema:
-
         headers = self.validate_sheet(work_sheet)
         ##DEBUG
         print(f'columns \n\t{"\n\t".join(headers)}')
@@ -92,10 +92,10 @@ class Fulfilment(Schema):
         xml.initialize("importFulfillments")
         ##TODO needs completing
         for ent in self.entities:
-            print(ent.get_value(self.fulfilment_id))
+            print(ent.get_value(Fulfilment.fulfilment_id))
 
             xml.push_tag("fulfillmentRecord")
-            self.process_attribute_name(xml, ent, self.fulfilment_id)
+            self.process_attribute_name(xml, ent, Fulfilment.fulfilment_id)
             xml.push_empty("migrationId")
 
             xml.push_tags("lifecycleInfo")
@@ -104,25 +104,25 @@ class Fulfilment(Schema):
 
             ## attributes
             for name in [
-                self.att_comment,
-                self.att_hcltech_email,
-                self.att_hcltech_representative,
-                self.att_order_number,
-                self.att_product_name,
-                self.att_product_version,
-                self.att_sales_contact_email]:
+                Fulfilment.att_comment,
+                Fulfilment.att_hcltech_email,
+                Fulfilment.att_hcltech_representative,
+                Fulfilment.att_order_number,
+                Fulfilment.att_product_name,
+                Fulfilment.att_product_version,
+                Fulfilment.att_sales_contact_email]:
                 ## inject value
-                self.process_attribute(xml, name.name, ent.get_value(name))
+                Fulfilment.process_attribute(xml, name.name, ent.get_value(name))
 
-            self.process_attribute_name(xml, ent, self.start_date)
+            self.process_attribute_name(xml, ent, Fulfilment.start_date)
             xml.push_tags("licenseFiles", "licenseFile")
-            self.process_attribute_name(xml, ent, self.license_file_definition_name)
-            self.process_attribute_name(xml, ent, self.license)
+            self.process_attribute_name(xml, ent, Fulfilment.license_file_definition_name)
+            self.process_attribute_name(xml, ent, Fulfilment.license)
             xml.pop_tag("licenseFiles")
 
             xml.push_tags("licenseFilenames", "licenseFilename")
-            self.process_attribute_name(xml, ent, self.license_file_definition_name)
-            self.process_attribute_name(xml, ent, self.license_filename)
+            self.process_attribute_name(xml, ent, Fulfilment.license_file_definition_name)
+            self.process_attribute_name(xml, ent, Fulfilment.license_filename)
             xml.pop_tag("licenseFilenames")
 
         xml.pop_tag("importFulfillments")

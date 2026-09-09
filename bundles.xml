@@ -4,7 +4,7 @@
 <product>
 <productName><![CDATA[TS Bundle A]]></productName>
 <version><![CDATA[Demo]]></version>
-<state><![CDATA[Deployed]]></state>
+<state><![CDATA[Draft]]></state>
 <features>
 <feature>
 <primaryKeys>
@@ -17,14 +17,14 @@
 <categoryAttributes>
 <categoryAttribute>
 <attributeName><![CDATA[SKUS]]></attributeName>
-<attributeValue><![CDATA[REVENERA-0001;REVENERA-0002;REVENERA-0003;REVENERA-0004]]></attributeValue>
+<attributeValue><![CDATA[REVENERA-0001:1;REVENERA-0002:1;REVENERA-0003:1;REVENERA-0004:1]]></attributeValue>
 </categoryAttribute>
 </categoryAttributes>
 </product>
 <product>
 <productName><![CDATA[TS Bundle B]]></productName>
 <version><![CDATA[Demo]]></version>
-<state><![CDATA[Deployed]]></state>
+<state><![CDATA[Draft]]></state>
 <features>
 <feature>
 <primaryKeys>
@@ -37,11 +37,11 @@
 <categoryAttributes>
 <categoryAttribute>
 <attributeName><![CDATA[BUNDLES]]></attributeName>
-<attributeValue><![CDATA[BUNDLE-0001]]></attributeValue>
+<attributeValue><![CDATA[BUNDLE-0001:1]]></attributeValue>
 </categoryAttribute>
 <categoryAttribute>
 <attributeName><![CDATA[SKUS]]></attributeName>
-<attributeValue><![CDATA[REVENERA-0005;REVENERA-0006;REVENERA-0007;REVENERA-0008]]></attributeValue>
+<attributeValue><![CDATA[REVENERA-0005:1;REVENERA-0006:2;REVENERA-0007:1;REVENERA-0008:12]]></attributeValue>
 </categoryAttribute>
 </categoryAttributes>
 </product>
