@@ -1,9 +1,9 @@
-from abc import ABC
 from dataclasses import dataclass
 from typing import final
 
-from schema import Schema, SchemaField, SchemaEntity, RecordWrapper
+from schema import Schema, SchemaField, RecordWrapper
 from xml_builder import XMLBuilder
+
 
 @final
 @dataclass(frozen=True)
@@ -65,7 +65,7 @@ class Bundle(Schema):
 
 
                 if row.has(Bundle.skus):
-                    self.assert_field_numeric(row.get_row(), row_num, Bundle.skus_count)
+                    row.assert_field_numeric(row_num, Bundle.skus_count)
 
                     current.append_value(Bundle.skus,f"{row.get(Bundle.skus)}:{row.get(Bundle.skus_count)}")
                 else:
@@ -74,7 +74,7 @@ class Bundle(Schema):
                             f"at row {row_num} - {Bundle.skus_count.name}({row.get(Bundle.skus_count)}) should not be defined")
 
                 if row.has(Bundle.bundles):
-                    self.assert_field_numeric(row.get_row(), row_num, Bundle.skus_count)
+                    row.assert_field_numeric(row_num, Bundle.skus_count)
                     current.append_value(Bundle.bundles, f"{row.get(Bundle.bundles)}:{row.get(Bundle.bundles_count)}")
                 else:
                     if row.has(Bundle.bundles_count):
