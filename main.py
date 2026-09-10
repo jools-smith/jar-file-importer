@@ -1,14 +1,9 @@
 import argparse
 import subprocess
-from contextlib import closing
 from typing import Any
-
-from openpyxl import load_workbook
 
 import bundle
 import fulfilment
-from schema import SchemaField, SchemaEntity, Schema
-from xml_builder import XMLBuilder
 
 ## ARGS
 parser = argparse.ArgumentParser(
