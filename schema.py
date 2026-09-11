@@ -1,6 +1,7 @@
 from abc import abstractmethod, ABC
 from contextlib import closing
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
 
 from openpyxl import load_workbook
@@ -8,10 +9,21 @@ from openpyxl import load_workbook
 from xml_builder import XMLBuilder
 
 
+class FieldType(Enum):
+    REQUIRED = 1
+    REQUIRED_NULL = 2
+    NOT_REQUIRED = 4
+
+    def is_required(self) -> bool:
+        return self == FieldType.REQUIRED or self == FieldType.REQUIRED_NULL
+
+    def is_nullable(self) -> bool:
+        return self == FieldType.NOT_REQUIRED or self == FieldType.REQUIRED_NULL
+
 @dataclass(frozen=True)
 class SchemaField:
     name: str
-    required: bool = True
+    type: FieldType = FieldType.REQUIRED
 
 @dataclass(frozen=True)
 class SchemaEntity:
@@ -36,20 +48,29 @@ class SchemaEntity:
         self.fields[field.name].append(value)
 
     def validate_matching(self, record, row_num):
-        for field in self.schema.get_required_field_names():
-            value = record.get(field)
+        for field in self.schema.get_required_fields():
 
-            # Blank value is allowed
-            if not Schema.has_value(value):
-                continue
+            current_value = self.get_value(field)
 
-            current_value = getattr(self, field)
+            value = record.get(field.name)
 
-            if str(value) != str(current_value):
+            if value is not None and not value == current_value:
                 raise ValueError(
                     f"Row {row_num}: {field} has value '{value}' "
                     f"but current bundle has '{current_value}'"
                 )
+
+            # # Blank value is allowed
+            # if not self.has_value(value):
+            #     continue
+            #
+            # current_value = getattr(self, field.name)
+            #
+            # if str(value) != str(current_value):
+            #     raise ValueError(
+            #         f"Row {row_num}: {field} has value '{value}' "
+            #         f"but current bundle has '{current_value}'"
+            #     )
 
 @dataclass(frozen=True)
 class RecordWrapper:
@@ -67,12 +88,12 @@ class RecordWrapper:
     def is_empty(self):
         return all(cell is None or str(cell).strip() == "" for cell in self.row)
 
-    def assert_field_exists(self, row_num, field):
-        if not self.has(field):
+    def assert_field_exists_or_is_nor_required(self, row_num, field):
+        if not self.has(field) and field.type == FieldType.REQUIRED:
             raise ValueError(f"Missing required {field.name} at row {row_num}")
 
     def assert_field_numeric(self, row_num, field):
-        self.assert_field_exists(row_num, field)
+        self.assert_field_exists_or_is_nor_required(row_num, field)
 
         val = str(self.get(field))
 
@@ -108,16 +129,14 @@ class Schema(ABC):
     def has_value(value):
         return value is not None and str(value).strip() != ""
 
+    def get_required_fields(self):
+        return [f for f in self.fields if f.type.is_required()]
+
     def get_required_field_names(self):
-        return [f.name for f in self.fields if f.required]
+        return [f.name for f in self.fields if f.type.is_required()]
 
     def get_field_names(self):
         return [f.name for f in self.fields]
-
-    # def get_field_definition(self, record, row_num, field):
-    #     name = field.name
-    #     val = str(record.get(name))
-    #     return name,val
 
     def validate_sheet(self, sheet):
 
@@ -155,9 +174,9 @@ class Schema(ABC):
         # print(type(record))
         # print(record)
         missing = [
-            field
-            for field in self.get_required_field_names()
-            if not Schema.has_value(record.get(field))
+            field.name
+            for field in self.get_required_fields()
+            if not Schema.has_value(record.get(field.name)) and field.type == FieldType.REQUIRED
         ]
 
         if missing:

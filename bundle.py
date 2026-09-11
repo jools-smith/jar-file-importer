@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import final
 
-from schema import Schema, SchemaField, RecordWrapper
+from schema import Schema, SchemaField, RecordWrapper, FieldType
 from xml_builder import XMLBuilder
 
 
@@ -10,14 +10,17 @@ from xml_builder import XMLBuilder
 class Bundle(Schema):
     product_name = SchemaField("productName")
     product_version = SchemaField("productVersion")
+    product_description = SchemaField("productDescription")
     state = SchemaField("state")
     feature_name = SchemaField("featureName")
     feature_version = SchemaField("featureVersion")
     feature_count = SchemaField("featureCount")
-    skus = SchemaField("skus", False)
-    skus_count = SchemaField("skuCount", False)
-    bundles = SchemaField("bundles", False)
-    bundles_count = SchemaField("bundleSkuCount", False)
+    skus = SchemaField("skus", FieldType.NOT_REQUIRED)
+    skus_count = SchemaField("skuCount", FieldType.NOT_REQUIRED)
+    bundles = SchemaField("bundles", FieldType.NOT_REQUIRED)
+    bundles_count = SchemaField("bundleSkuCount", FieldType.NOT_REQUIRED)
+    solution = SchemaField("solution", FieldType.REQUIRED_NULL)
+    solution_family = SchemaField("solutionFamily", FieldType.REQUIRED_NULL)
 
     def __init__(self):
         super().__init__(
@@ -25,6 +28,7 @@ class Bundle(Schema):
             fields = [
                 Bundle.product_name,
                 Bundle.product_version,
+                Bundle.product_description,
                 Bundle.state,
                 Bundle.feature_name,
                 Bundle.feature_version,
@@ -32,7 +36,9 @@ class Bundle(Schema):
                 Bundle.skus,
                 Bundle.skus_count,
                 Bundle.bundles,
-                Bundle.bundles_count
+                Bundle.bundles_count,
+                Bundle.solution,
+                Bundle.solution_family
             ]
         )
 
@@ -60,9 +66,14 @@ class Bundle(Schema):
                     current = self.create_entity_with_required_fields(row.get_row(), row_num)
 
                     self.entities.append(current)
+
+                    if row.has(Bundle.solution):
+                        current.set_value(Bundle.solution, row.get(Bundle.solution))
+
+                    if row.has(Bundle.solution_family):
+                        current.set_value(Bundle.solution_family, row.get(Bundle.solution_family))
                 else:
                     current.validate_matching(row.get_row(), row_num)
-
 
                 if row.has(Bundle.skus):
                     row.assert_field_numeric(row_num, Bundle.skus_count)
@@ -81,6 +92,7 @@ class Bundle(Schema):
                         raise ValueError(
                             f"at row {row_num} - {Bundle.bundles_count.name}({row.get(Bundle.bundles_count)}) should not be defined")
 
+
             #end if not Schema.row_is_empty(record):
         #end for row_num
         return self
@@ -94,6 +106,7 @@ class Bundle(Schema):
 
             xml.push_tag("product")
             xml.push_cdata("productName", ent.get_value(Bundle.product_name))
+            xml.push_cdata("description", ent.get_value(Bundle.product_description))
             xml.push_cdata("version", ent.get_value(Bundle.product_version))
             xml.push_cdata("state", ent.get_value(Bundle.state))
             xml.push_tags("features", "feature", "primaryKeys")
@@ -115,6 +128,22 @@ class Bundle(Schema):
                 xml.push_cdata("attributeName", "SKUS")
                 xml.push_cdata("attributeValue", ";".join(ent.get_value(Bundle.skus)))
                 xml.pop_tag("categoryAttribute")
+
+            xml.pop_tag("categoryAttributes")
+
+            xml.push_tags("customAttributes")
+
+            if ent.has_value(Bundle.solution):
+                xml.push_tags("attribute")
+                xml.push_cdata("attributeName", "Solution")
+                xml.push_cdata("attributeValue", ent.get_value(Bundle.solution))
+                xml.pop_tag("attribute")
+
+            if ent.has_value(Bundle.solution_family):
+                xml.push_tags("attribute")
+                xml.push_cdata("attributeName", "SolutionFamily")
+                xml.push_cdata("attributeValue", ent.get_value(Bundle.solution_family))
+                xml.pop_tag("attribute")
 
             xml.pop_tag("product")
 

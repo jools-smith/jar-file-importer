@@ -3,6 +3,7 @@
 <products xmlns="urn:com.macrovision:flexnet/operations/exportimport">
 <product>
 <productName><![CDATA[HPE vTeMIP Standard Ed 1 vCore E-LTU]]></productName>
+<description><![CDATA[HPE vTeMIP Standard Ed 1 vCore E-LTU]]></description>
 <version><![CDATA[1]]></version>
 <state><![CDATA[draft]]></state>
 <features>
@@ -20,9 +21,20 @@
 <attributeValue><![CDATA[P9Y85AAE_PROD:1;P9Y85AAE_DEV:1]]></attributeValue>
 </categoryAttribute>
 </categoryAttributes>
+<customAttributes>
+<attribute>
+<attributeName><![CDATA[Solution]]></attributeName>
+<attributeValue><![CDATA[Arse]]></attributeValue>
+</attribute>
+<attribute>
+<attributeName><![CDATA[SolutionFamily]]></attributeName>
+<attributeValue><![CDATA[Hole]]></attributeValue>
+</attribute>
+</customAttributes>
 </product>
 <product>
 <productName><![CDATA[HPE UCA 1 vCores Updt E-LTU]]></productName>
+<description><![CDATA[HPE UCA 1 vCores Updt E-LTU]]></description>
 <version><![CDATA[1]]></version>
 <state><![CDATA[draft]]></state>
 <features>
@@ -40,9 +52,20 @@
 <attributeValue><![CDATA[Q0N73AAE_HPSA:1;Q0N73AAE_PROD:1;Q0N73AAE_DEV:1]]></attributeValue>
 </categoryAttribute>
 </categoryAttributes>
+<customAttributes>
+<attribute>
+<attributeName><![CDATA[Solution]]></attributeName>
+<attributeValue><![CDATA[None]]></attributeValue>
+</attribute>
+<attribute>
+<attributeName><![CDATA[SolutionFamily]]></attributeName>
+<attributeValue><![CDATA[Hole]]></attributeValue>
+</attribute>
+</customAttributes>
 </product>
 <product>
 <productName><![CDATA[HPE vTeMIP Suite upgr Cloud Entry E-LTU]]></productName>
+<description><![CDATA[HPE vTeMIP Suite upgr Cloud Entry E-LTU]]></description>
 <version><![CDATA[1]]></version>
 <state><![CDATA[draft]]></state>
 <features>
@@ -61,8 +84,18 @@
 </categoryAttribute>
 <categoryAttribute>
 <attributeName><![CDATA[SKUS]]></attributeName>
-<attributeValue><![CDATA[JK703AAE:3;P9Y80AAE:6;P9Y81AAE:5]]></attributeValue>
+<attributeValue><![CDATA[JK703AAE:3;P9Y80AAE:6]]></attributeValue>
 </categoryAttribute>
 </categoryAttributes>
+<customAttributes>
+<attribute>
+<attributeName><![CDATA[Solution]]></attributeName>
+<attributeValue><![CDATA[Arse]]></attributeValue>
+</attribute>
+<attribute>
+<attributeName><![CDATA[SolutionFamily]]></attributeName>
+<attributeValue><![CDATA[None]]></attributeValue>
+</attribute>
+</customAttributes>
 </product>
 </products>
