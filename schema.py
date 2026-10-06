@@ -88,20 +88,22 @@ class RecordWrapper:
     def is_empty(self):
         return all(cell is None or str(cell).strip() == "" for cell in self.row)
 
-    def assert_field_exists_or_is_nor_required(self, row_num, field):
+    def assert_field_exists_or_is_not_required(self, row_num, field):
         if not self.has(field) and field.type == FieldType.REQUIRED:
             raise ValueError(f"Missing required {field.name} at row {row_num}")
 
     def assert_field_numeric(self, row_num, field):
-        self.assert_field_exists_or_is_nor_required(row_num, field)
+        self.assert_field_exists_or_is_not_required(row_num, field)
 
         val = str(self.get(field))
 
-        if not val.isnumeric():
-            raise ValueError(f"at row {row_num} - {field.name}({val}) is not numeric")
+        if val is not None:
+            # print(row_num, field, val)
+            if not val.isnumeric():
+                raise ValueError(f"at row {row_num} - {field.name}({val}) is not numeric")
 
-        if int(val) < 1:
-            raise ValueError(f"at row {row_num} - {field.name}({val}) must be greater than zero")
+            if int(val) < 1:
+                raise ValueError(f"at row {row_num} - {field.name}({val}) must be greater than zero")
 
 @dataclass(frozen=True)
 class Schema(ABC):
@@ -171,8 +173,6 @@ class Schema(ABC):
         return parsed_headers
 
     def validate_required_fields(self, record, row_num):
-        # print(type(record))
-        # print(record)
         missing = [
             field.name
             for field in self.get_required_fields()

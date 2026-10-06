@@ -77,7 +77,6 @@ class Bundle(Schema):
 
                 if row.has(Bundle.skus):
                     row.assert_field_numeric(row_num, Bundle.skus_count)
-
                     current.append_value(Bundle.skus,f"{row.get(Bundle.skus)}:{row.get(Bundle.skus_count)}")
                 else:
                     if row.has(Bundle.skus_count):
@@ -85,7 +84,7 @@ class Bundle(Schema):
                             f"at row {row_num} - {Bundle.skus_count.name}({row.get(Bundle.skus_count)}) should not be defined")
 
                 if row.has(Bundle.bundles):
-                    row.assert_field_numeric(row_num, Bundle.skus_count)
+                    row.assert_field_numeric(row_num, Bundle.bundles_count)
                     current.append_value(Bundle.bundles, f"{row.get(Bundle.bundles)}:{row.get(Bundle.bundles_count)}")
                 else:
                     if row.has(Bundle.bundles_count):
@@ -109,12 +108,29 @@ class Bundle(Schema):
             xml.push_cdata("description", ent.get_value(Bundle.product_description))
             xml.push_cdata("version", ent.get_value(Bundle.product_version))
             xml.push_cdata("state", ent.get_value(Bundle.state))
+
+            # TODO: kludge to get license technology!!
+            xml.push_tags("licenseTechnology", "primaryKeys")
+            xml.push_cdata("name", "NONE")
+            xml.pop_tag("licenseTechnology")
+
+            # TODO: kludge to get license generator!!
+            xml.push_tags("licenseGenerator", "primaryKeys")
+            xml.push_cdata("name", "NONE")
+            xml.pop_tag("licenseGenerator")
+
             xml.push_tags("features", "feature", "primaryKeys")
             xml.push_cdata("name", ent.get_value(Bundle.feature_name))
             xml.push_cdata("version", ent.get_value(Bundle.feature_version))
             xml.pop_tag("primaryKeys")
             xml.push_cdata("count", ent.get_value(Bundle.feature_count))
             xml.pop_tag("features")
+
+            #TODO: kludge to get license model in -- assume all are NONE!!
+            xml.push_tags("licenseModels", "licenseModel", "primaryKeys")
+            xml.push_cdata("name", "NONE")
+            xml.pop_tag("licenseModels")
+
             xml.push_tags("categoryAttributes")
 
             if ent.has_value(Bundle.bundles):
@@ -133,17 +149,17 @@ class Bundle(Schema):
 
             xml.push_tags("customAttributes")
 
-            if ent.has_value(Bundle.solution):
-                xml.push_tags("attribute")
-                xml.push_cdata("attributeName", "Solution")
-                xml.push_cdata("attributeValue", ent.get_value(Bundle.solution))
-                xml.pop_tag("attribute")
-
-            if ent.has_value(Bundle.solution_family):
-                xml.push_tags("attribute")
-                xml.push_cdata("attributeName", "SolutionFamily")
-                xml.push_cdata("attributeValue", ent.get_value(Bundle.solution_family))
-                xml.pop_tag("attribute")
+            # if ent.has_value(Bundle.solution):
+            #     xml.push_tags("attribute")
+            #     xml.push_cdata("attributeName", "Solution")
+            #     xml.push_cdata("attributeValue", ent.get_value(Bundle.solution))
+            #     xml.pop_tag("attribute")
+            #
+            # if ent.has_value(Bundle.solution_family):
+            #     xml.push_tags("attribute")
+            #     xml.push_cdata("attributeName", "SolutionFamily")
+            #     xml.push_cdata("attributeValue", ent.get_value(Bundle.solution_family))
+            #     xml.pop_tag("attribute")
 
             xml.pop_tag("product")
 
