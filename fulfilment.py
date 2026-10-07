@@ -1,130 +1,131 @@
 from dataclasses import dataclass
-from typing import final
+from typing import final, Any
 
 from schema import Schema, SchemaField
 from xml_builder import XMLBuilder
 
+
 @final
 @dataclass(frozen=True)
 class Fulfilment(Schema):
-    fulfilment_id = SchemaField("fulfillmentId")
-    activation_id = SchemaField("activationId")
-    activation_count = SchemaField("activationCount")
-    overdraft_count = SchemaField("overdraftCount", False)
-    start_date = SchemaField("startDate")
+  fulfilment_id = SchemaField("fulfillmentId")
+  activation_id = SchemaField("activationId")
+  activation_count = SchemaField("activationCount")
+  overdraft_count = SchemaField("overdraftCount", False)
+  start_date = SchemaField("startDate")
 
-    att_comment = SchemaField("Comment", False)
-    att_hcltech_email = SchemaField("HCLTech_Email", False)
-    att_hcltech_representative = SchemaField("HCLTech_Representative", False)
-    att_order_number = SchemaField("Order_Number", False)
-    att_product_name = SchemaField("Product_Name", False)
-    att_product_version = SchemaField("Product_Version", False)
-    att_sales_contact_email = SchemaField("Sales_Contact_Email", False)
-    fulfilment_date_time = SchemaField("fulfillDateTime")
-    license_file_definition_name = SchemaField("licenseDefinitionName")
-    license = SchemaField("license")
-    license_filename = SchemaField("licfilename")
+  att_comment = SchemaField("Comment", False)
+  att_hcltech_email = SchemaField("HCLTech_Email", False)
+  att_hcltech_representative = SchemaField("HCLTech_Representative", False)
+  att_order_number = SchemaField("Order_Number", False)
+  att_product_name = SchemaField("Product_Name", False)
+  att_product_version = SchemaField("Product_Version", False)
+  att_sales_contact_email = SchemaField("Sales_Contact_Email", False)
+  fulfilment_date_time = SchemaField("fulfillDateTime")
+  license_file_definition_name = SchemaField("licenseDefinitionName")
+  license = SchemaField("license")
+  license_filename = SchemaField("licfilename")
 
+  def __init__(self):
+    super().__init__(
+      name="fulfilment",
+      fields=[
+        Fulfilment.fulfilment_id,
+        Fulfilment.activation_id,
+        Fulfilment.activation_count,
+        Fulfilment.overdraft_count,
+        Fulfilment.start_date,
+        Fulfilment.fulfilment_date_time,
+        Fulfilment.license_file_definition_name,
+        Fulfilment.license,
+        Fulfilment.license_filename,
+        ### attributes
+        Fulfilment.att_comment,
+        Fulfilment.att_hcltech_email,
+        Fulfilment.att_hcltech_representative,
+        Fulfilment.att_order_number,
+        Fulfilment.att_product_name,
+        Fulfilment.att_product_version,
+        Fulfilment.att_sales_contact_email
+      ]
+    )
 
-    def __init__(self):
-        super().__init__(
-            name = "fulfilment",
-            fields = [
-                Fulfilment.fulfilment_id,
-                Fulfilment.activation_id,
-                Fulfilment.activation_count,
-                Fulfilment.overdraft_count,
-                Fulfilment.start_date,
-                Fulfilment.fulfilment_date_time,
-                Fulfilment.license_file_definition_name,
-                Fulfilment.license,
-                Fulfilment.license_filename,
-                ### attributes
-                Fulfilment.att_comment,
-                Fulfilment.att_hcltech_email,
-                Fulfilment.att_hcltech_representative,
-                Fulfilment.att_order_number,
-                Fulfilment.att_product_name,
-                Fulfilment.att_product_version,
-                Fulfilment.att_sales_contact_email
-            ]
-        )
+  def process_worksheet(self, work_sheet) -> Schema:
+    headers = self.validate_sheet(work_sheet)
+    ##DEBUG
+    print(f'columns \n\t{"\n\t".join(headers)}')
 
-    def process_worksheet(self, work_sheet) -> Schema:
-        headers = self.validate_sheet(work_sheet)
-        ##DEBUG
-        print(f'columns \n\t{"\n\t".join(headers)}')
+    # Process data rows
+    for row_num, row in enumerate(
+        work_sheet.iter_rows(min_row=2, values_only=True),
+        start=2
+    ):
 
-        # Process data rows
-        for row_num, row in enumerate(
-                work_sheet.iter_rows(min_row=2, values_only=True),
-                start=2):
+      record = dict(zip(headers, row))
 
-            record = dict(zip(headers, row))
+      if not Schema.row_is_empty(record):
 
-            if not Schema.row_is_empty(record):
+        current = self.create_entity_with_all_fields(record, row_num)
 
-                current = self.create_entity_with_all_fields(record, row_num)
+        self.entities.append(current)
 
-                self.entities.append(current)
+      # end if not Schema.row_is_empty(record):
+    # end for row_num
+    return self
 
-            #end if not Schema.row_is_empty(record):
-        #end for row_num
-        return self
+  @staticmethod
+  def process_attribute(xml, att_name, att_value):
+    print(att_name, att_value)
+    xml.push_tag("param")
+    xml.push_cdata("name", att_name)
+    if att_value:
+      xml.push_cdata("value", att_value)
+    else:
+      xml.push_empty("value")
+    xml.pop_tag("param")
 
-    @staticmethod
-    def process_attribute(xml, att_name, att_value):
-        print(att_name, att_value)
-        xml.push_tag("param")
-        xml.push_cdata("name", att_name)
-        if att_value:
-            xml.push_cdata("value", att_value)
-        else:
-            xml.push_empty("value")
-        xml.pop_tag("param")
+  @staticmethod
+  def process_attribute_name(xml, ent, attribute):
+    xml.push_cdata(attribute.name, ent.get_value(attribute))
 
-    @staticmethod
-    def process_attribute_name(xml, ent, attribute):
-        xml.push_cdata(attribute.name, ent.get_value(attribute))
+  def process_entity_list(self, data: list[Any]) -> str:
+    xml = XMLBuilder()
+    xml.initialize("importFulfillments")
+    ##TODO needs completing
+    for ent in data:
+      print(ent.get_value(Fulfilment.fulfilment_id))
 
-    def process_entities(self) -> XMLBuilder:
-        xml = XMLBuilder()
-        xml.initialize("importFulfillments")
-        ##TODO needs completing
-        for ent in self.entities:
-            print(ent.get_value(Fulfilment.fulfilment_id))
+      xml.push_tag("fulfillmentRecord")
+      self.process_attribute_name(xml, ent, Fulfilment.fulfilment_id)
+      xml.push_empty("migrationId")
 
-            xml.push_tag("fulfillmentRecord")
-            self.process_attribute_name(xml, ent, Fulfilment.fulfilment_id)
-            xml.push_empty("migrationId")
+      xml.push_tags("lifecycleInfo")
+      xml.push_empty("fulfillAction")
+      xml.pop_tag("lifecycleInfo")
 
-            xml.push_tags("lifecycleInfo")
-            xml.push_empty("fulfillAction")
-            xml.pop_tag("lifecycleInfo")
+      ## attributes
+      for name in [
+        Fulfilment.att_comment,
+        Fulfilment.att_hcltech_email,
+        Fulfilment.att_hcltech_representative,
+        Fulfilment.att_order_number,
+        Fulfilment.att_product_name,
+        Fulfilment.att_product_version,
+        Fulfilment.att_sales_contact_email]:
+        ## inject value
+        Fulfilment.process_attribute(xml, name.name, ent.get_value(name))
 
-            ## attributes
-            for name in [
-                Fulfilment.att_comment,
-                Fulfilment.att_hcltech_email,
-                Fulfilment.att_hcltech_representative,
-                Fulfilment.att_order_number,
-                Fulfilment.att_product_name,
-                Fulfilment.att_product_version,
-                Fulfilment.att_sales_contact_email]:
-                ## inject value
-                Fulfilment.process_attribute(xml, name.name, ent.get_value(name))
+      self.process_attribute_name(xml, ent, Fulfilment.start_date)
+      xml.push_tags("licenseFiles", "licenseFile")
+      self.process_attribute_name(xml, ent, Fulfilment.license_file_definition_name)
+      self.process_attribute_name(xml, ent, Fulfilment.license)
+      xml.pop_tag("licenseFiles")
 
-            self.process_attribute_name(xml, ent, Fulfilment.start_date)
-            xml.push_tags("licenseFiles", "licenseFile")
-            self.process_attribute_name(xml, ent, Fulfilment.license_file_definition_name)
-            self.process_attribute_name(xml, ent, Fulfilment.license)
-            xml.pop_tag("licenseFiles")
+      xml.push_tags("licenseFilenames", "licenseFilename")
+      self.process_attribute_name(xml, ent, Fulfilment.license_file_definition_name)
+      self.process_attribute_name(xml, ent, Fulfilment.license_filename)
+      xml.pop_tag("licenseFilenames")
 
-            xml.push_tags("licenseFilenames", "licenseFilename")
-            self.process_attribute_name(xml, ent, Fulfilment.license_file_definition_name)
-            self.process_attribute_name(xml, ent, Fulfilment.license_filename)
-            xml.pop_tag("licenseFilenames")
+    xml.pop_tag("importFulfillments")
 
-        xml.pop_tag("importFulfillments")
-
-        return xml
+    return xml.text()

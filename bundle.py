@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from itertools import batched
+from itertools import chain
+from typing import Any
 from typing import final
 
 from schema import Schema, SchemaField, RecordWrapper, FieldType
@@ -8,161 +11,163 @@ from xml_builder import XMLBuilder
 @final
 @dataclass(frozen=True)
 class Bundle(Schema):
-    product_name = SchemaField("productName")
-    product_version = SchemaField("productVersion")
-    product_description = SchemaField("productDescription")
-    state = SchemaField("state")
-    feature_name = SchemaField("featureName")
-    feature_version = SchemaField("featureVersion")
-    feature_count = SchemaField("featureCount")
-    skus = SchemaField("skus", FieldType.NOT_REQUIRED)
-    skus_count = SchemaField("skuCount", FieldType.NOT_REQUIRED)
-    bundles = SchemaField("bundles", FieldType.NOT_REQUIRED)
-    bundles_count = SchemaField("bundleSkuCount", FieldType.NOT_REQUIRED)
-    solution = SchemaField("solution", FieldType.REQUIRED_NULL)
-    solution_family = SchemaField("solutionFamily", FieldType.REQUIRED_NULL)
+  product_name = SchemaField("productName")
+  product_version = SchemaField("productVersion")
+  product_description = SchemaField("productDescription")
+  state = SchemaField("state")
+  feature_name = SchemaField("featureName")
+  feature_version = SchemaField("featureVersion")
+  feature_count = SchemaField("featureCount")
+  skus = SchemaField("skus", FieldType.NOT_REQUIRED)
+  skus_count = SchemaField("skuCount", FieldType.NOT_REQUIRED)
+  bundles = SchemaField("bundles", FieldType.NOT_REQUIRED)
+  bundles_count = SchemaField("bundleSkuCount", FieldType.NOT_REQUIRED)
+  solution = SchemaField("solution", FieldType.REQUIRED_NULL)
+  solution_family = SchemaField("solutionFamily", FieldType.REQUIRED_NULL)
 
-    def __init__(self):
-        super().__init__(
-            name = "bundle",
-            fields = [
-                Bundle.product_name,
-                Bundle.product_version,
-                Bundle.product_description,
-                Bundle.state,
-                Bundle.feature_name,
-                Bundle.feature_version,
-                Bundle.feature_count,
-                Bundle.skus,
-                Bundle.skus_count,
-                Bundle.bundles,
-                Bundle.bundles_count,
-                Bundle.solution,
-                Bundle.solution_family
-            ]
-        )
+  def __init__(self):
+    super().__init__(
+      name="bundle",
+      fields=[
+        Bundle.product_name,
+        Bundle.product_version,
+        Bundle.product_description,
+        Bundle.state,
+        Bundle.feature_name,
+        Bundle.feature_version,
+        Bundle.feature_count,
+        Bundle.skus,
+        Bundle.skus_count,
+        Bundle.bundles,
+        Bundle.bundles_count,
+        Bundle.solution,
+        Bundle.solution_family
+        ]
+      )
 
-    def process_worksheet(self, work_sheet) -> Schema:
-        current = None
-        # local_entities: list[SchemaEntity] = []
+  def process_worksheet(self, work_sheet) -> Schema:
+    current = None
+    # local_entities: list[SchemaEntity] = []
 
-        headers = self.validate_sheet(work_sheet)
-        ##DEBUG
-        print(f'columns \n\t{"\n\t".join(headers)}')
+    headers = self.validate_sheet(work_sheet)
+    ##DEBUG
+    print(f'columns \n\t{"\n\t".join(headers)}')
 
-        # Process data rows
-        for row_num, row in enumerate(
-                work_sheet.iter_rows(min_row=2, values_only=True),
-                start=2):
+    # Process data rows
+    for row_num, row in enumerate(
+        work_sheet.iter_rows(min_row=2, values_only=True),
+        start=2
+        ):
 
-            row = RecordWrapper(dict(zip(headers, row)))
+      row = RecordWrapper(dict(zip(headers, row)))
 
-            # print(record)
-            if not row.is_empty():
-                ## not a blank row
-                if current is None or (
-                        row.has(Bundle.product_name) and row.get(Bundle.product_name) != current.get_value(Bundle.product_name)):
+      # print(record)
+      if not row.is_empty():
+        ## not a blank row
+        if current is None or (
+            row.has(Bundle.product_name) and row.get(Bundle.product_name) != current.get_value(Bundle.product_name)):
 
-                    current = self.create_entity_with_required_fields(row.get_row(), row_num)
+          current = self.create_entity_with_required_fields(row.get_row(), row_num)
 
-                    self.entities.append(current)
+          self.entities.append(current)
 
-                    if row.has(Bundle.solution):
-                        current.set_value(Bundle.solution, row.get(Bundle.solution))
+          if row.has(Bundle.solution):
+            current.set_value(Bundle.solution, row.get(Bundle.solution))
 
-                    if row.has(Bundle.solution_family):
-                        current.set_value(Bundle.solution_family, row.get(Bundle.solution_family))
-                else:
-                    current.validate_matching(row.get_row(), row_num)
+          if row.has(Bundle.solution_family):
+            current.set_value(Bundle.solution_family, row.get(Bundle.solution_family))
+        else:
+          current.validate_matching(row.get_row(), row_num)
 
-                if row.has(Bundle.skus):
-                    row.assert_field_numeric(row_num, Bundle.skus_count)
-                    current.append_value(Bundle.skus,f"{row.get(Bundle.skus)}:{row.get(Bundle.skus_count)}")
-                else:
-                    if row.has(Bundle.skus_count):
-                        raise ValueError(
-                            f"at row {row_num} - {Bundle.skus_count.name}({row.get(Bundle.skus_count)}) should not be defined")
+        if row.has(Bundle.skus):
+          row.assert_field_numeric(row_num, Bundle.skus_count)
+          current.append_value(Bundle.skus, f"{row.get(Bundle.skus)}:{row.get(Bundle.skus_count)}")
+        else:
+          if row.has(Bundle.skus_count):
+            raise ValueError(
+              f"at row {row_num} - {Bundle.skus_count.name}({row.get(Bundle.skus_count)}) should not be defined"
+              )
 
-                if row.has(Bundle.bundles):
-                    row.assert_field_numeric(row_num, Bundle.bundles_count)
-                    current.append_value(Bundle.bundles, f"{row.get(Bundle.bundles)}:{row.get(Bundle.bundles_count)}")
-                else:
-                    if row.has(Bundle.bundles_count):
-                        raise ValueError(
-                            f"at row {row_num} - {Bundle.bundles_count.name}({row.get(Bundle.bundles_count)}) should not be defined")
+        if row.has(Bundle.bundles):
+          row.assert_field_numeric(row_num, Bundle.bundles_count)
+          current.append_value(Bundle.bundles, f"{row.get(Bundle.bundles)}:{row.get(Bundle.bundles_count)}")
+        else:
+          if row.has(Bundle.bundles_count):
+            raise ValueError(
+              f"at row {row_num} - {Bundle.bundles_count.name}({row.get(Bundle.bundles_count)}) should not be defined"
+              )
 
+      # end if not Schema.row_is_empty(record):
+    # end for row_num
+    return self
 
-            #end if not Schema.row_is_empty(record):
-        #end for row_num
-        return self
+  def process_entity_list(self, data: list[Any]) -> str:
+    xml = XMLBuilder()
+    xml.initialize("products")
 
-    def process_entities(self) -> XMLBuilder:
-        xml = XMLBuilder()
-        xml.initialize("products")
+    for ent in data:
+      print(ent.get_value(Bundle.product_name))
 
-        for ent in self.entities:
-            print(ent.get_value(Bundle.product_name))
+      xml.push_tag("product")
+      xml.push_cdata("productName", ent.get_value(Bundle.product_name))
+      xml.push_cdata("description", ent.get_value(Bundle.product_description))
+      xml.push_cdata("version", ent.get_value(Bundle.product_version))
+      xml.push_cdata("state", ent.get_value(Bundle.state))
 
-            xml.push_tag("product")
-            xml.push_cdata("productName", ent.get_value(Bundle.product_name))
-            xml.push_cdata("description", ent.get_value(Bundle.product_description))
-            xml.push_cdata("version", ent.get_value(Bundle.product_version))
-            xml.push_cdata("state", ent.get_value(Bundle.state))
+      # TODO: kludge to get license technology!!
+      xml.push_tags("licenseTechnology", "primaryKeys")
+      xml.push_cdata("name", "NONE")
+      xml.pop_tag("licenseTechnology")
 
-            # TODO: kludge to get license technology!!
-            xml.push_tags("licenseTechnology", "primaryKeys")
-            xml.push_cdata("name", "NONE")
-            xml.pop_tag("licenseTechnology")
+      # TODO: kludge to get license generator!!
+      xml.push_tags("licenseGenerator", "primaryKeys")
+      xml.push_cdata("name", "NONE")
+      xml.pop_tag("licenseGenerator")
 
-            # TODO: kludge to get license generator!!
-            xml.push_tags("licenseGenerator", "primaryKeys")
-            xml.push_cdata("name", "NONE")
-            xml.pop_tag("licenseGenerator")
+      xml.push_tags("features", "feature", "primaryKeys")
+      xml.push_cdata("name", ent.get_value(Bundle.feature_name))
+      xml.push_cdata("version", ent.get_value(Bundle.feature_version))
+      xml.pop_tag("primaryKeys")
+      xml.push_cdata("count", ent.get_value(Bundle.feature_count))
+      xml.pop_tag("features")
 
-            xml.push_tags("features", "feature", "primaryKeys")
-            xml.push_cdata("name", ent.get_value(Bundle.feature_name))
-            xml.push_cdata("version", ent.get_value(Bundle.feature_version))
-            xml.pop_tag("primaryKeys")
-            xml.push_cdata("count", ent.get_value(Bundle.feature_count))
-            xml.pop_tag("features")
+      # TODO: kludge to get license model in -- assume all are NONE!!
+      xml.push_tags("licenseModels", "licenseModel", "primaryKeys")
+      xml.push_cdata("name", "NONE")
+      xml.pop_tag("licenseModels")
 
-            #TODO: kludge to get license model in -- assume all are NONE!!
-            xml.push_tags("licenseModels", "licenseModel", "primaryKeys")
-            xml.push_cdata("name", "NONE")
-            xml.pop_tag("licenseModels")
+      xml.push_tags("categoryAttributes")
 
-            xml.push_tags("categoryAttributes")
+      if ent.has_value(Bundle.bundles):
+        xml.push_tags("categoryAttribute")
+        xml.push_cdata("attributeName", "BUNDLES")
+        xml.push_cdata("attributeValue", ";".join(ent.get_value(Bundle.bundles)))
+        xml.pop_tag("categoryAttribute")
 
-            if ent.has_value(Bundle.bundles):
-                xml.push_tags("categoryAttribute")
-                xml.push_cdata("attributeName", "BUNDLES")
-                xml.push_cdata("attributeValue", ";".join(ent.get_value(Bundle.bundles)))
-                xml.pop_tag("categoryAttribute")
+      if ent.has_value(Bundle.skus):
+        xml.push_tags("categoryAttribute")
+        xml.push_cdata("attributeName", "SKUS")
+        xml.push_cdata("attributeValue", ";".join(ent.get_value(Bundle.skus)))
+        xml.pop_tag("categoryAttribute")
 
-            if ent.has_value(Bundle.skus):
-                xml.push_tags("categoryAttribute")
-                xml.push_cdata("attributeName", "SKUS")
-                xml.push_cdata("attributeValue", ";".join(ent.get_value(Bundle.skus)))
-                xml.pop_tag("categoryAttribute")
+      xml.pop_tag("categoryAttributes")
 
-            xml.pop_tag("categoryAttributes")
+      xml.push_tags("customAttributes")
 
-            xml.push_tags("customAttributes")
+      # if ent.has_value(Bundle.solution):
+      #     xml.push_tags("attribute")
+      #     xml.push_cdata("attributeName", "Solution")
+      #     xml.push_cdata("attributeValue", ent.get_value(Bundle.solution))
+      #     xml.pop_tag("attribute")
+      #
+      # if ent.has_value(Bundle.solution_family):
+      #     xml.push_tags("attribute")
+      #     xml.push_cdata("attributeName", "SolutionFamily")
+      #     xml.push_cdata("attributeValue", ent.get_value(Bundle.solution_family))
+      #     xml.pop_tag("attribute")
 
-            # if ent.has_value(Bundle.solution):
-            #     xml.push_tags("attribute")
-            #     xml.push_cdata("attributeName", "Solution")
-            #     xml.push_cdata("attributeValue", ent.get_value(Bundle.solution))
-            #     xml.pop_tag("attribute")
-            #
-            # if ent.has_value(Bundle.solution_family):
-            #     xml.push_tags("attribute")
-            #     xml.push_cdata("attributeName", "SolutionFamily")
-            #     xml.push_cdata("attributeValue", ent.get_value(Bundle.solution_family))
-            #     xml.pop_tag("attribute")
+      xml.pop_tag("product")
 
-            xml.pop_tag("product")
+    xml.pop_tag("products")
 
-        xml.pop_tag("products")
-
-        return xml
+    return xml.text()

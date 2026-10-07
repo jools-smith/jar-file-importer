@@ -2,6 +2,7 @@ from abc import abstractmethod, ABC
 from contextlib import closing
 from dataclasses import dataclass, field
 from enum import Enum
+from itertools import batched, chain
 from typing import Any
 
 from openpyxl import load_workbook
@@ -10,192 +11,223 @@ from xml_builder import XMLBuilder
 
 
 class FieldType(Enum):
-    REQUIRED = 1
-    REQUIRED_NULL = 2
-    NOT_REQUIRED = 4
+  REQUIRED = 1
+  REQUIRED_NULL = 2
+  NOT_REQUIRED = 4
 
-    def is_required(self) -> bool:
-        return self == FieldType.REQUIRED or self == FieldType.REQUIRED_NULL
+  def is_required(self) -> bool:
+    return self == FieldType.REQUIRED or self == FieldType.REQUIRED_NULL
 
-    def is_nullable(self) -> bool:
-        return self == FieldType.NOT_REQUIRED or self == FieldType.REQUIRED_NULL
+  def is_nullable(self) -> bool:
+    return self == FieldType.NOT_REQUIRED or self == FieldType.REQUIRED_NULL
+
 
 @dataclass(frozen=True)
 class SchemaField:
-    name: str
-    type: FieldType = FieldType.REQUIRED
+  name: str
+  type: FieldType = FieldType.REQUIRED
+
 
 @dataclass(frozen=True)
 class SchemaEntity:
-    schema: Schema
-    fields: dict[str,Any]
+  schema: Schema
+  fields: dict[str, Any]
 
-    def has_value(self, field: SchemaField) -> bool:
-        return self.fields.__contains__(field.name)
+  def has_value(self, field: SchemaField) -> bool:
+    return self.fields.__contains__(field.name)
 
-    def get_value(self, field: SchemaField):
-        return self.fields.get(field.name)
+  def get_value(self, field: SchemaField):
+    return self.fields.get(field.name)
 
-    ## str value
-    def set_value(self, field: SchemaField, value:str):
-        self.fields[field.name] = value
+  ## str value
+  def set_value(self, field: SchemaField, value: str):
+    self.fields[field.name] = value
 
-    ## array value
-    def append_value(self, field: SchemaField, value:str):
-        if not self.has_value(field):
-            self.fields[field.name] = []
+  ## array value
+  def append_value(self, field: SchemaField, value: str):
+    if not self.has_value(field):
+      self.fields[field.name] = []
 
-        self.fields[field.name].append(value)
+    self.fields[field.name].append(value)
 
-    def validate_matching(self, record, row_num):
-        for field in self.schema.get_required_fields():
+  def validate_matching(self, record, row_num):
+    for field in self.schema.get_required_fields():
 
-            current_value = self.get_value(field)
+      current_value = self.get_value(field)
 
-            value = record.get(field.name)
+      value = record.get(field.name)
 
-            if value is not None and not value == current_value:
-                raise ValueError(
-                    f"Row {row_num}: {field} has value '{value}' "
-                    f"but current bundle has '{current_value}'"
-                )
+      if value is not None and not value == current_value:
+        raise ValueError(
+          f"Row {row_num}: {field} has value '{value}' "
+          f"but current bundle has '{current_value}'"
+        )
 
-            # # Blank value is allowed
-            # if not self.has_value(value):
-            #     continue
-            #
-            # current_value = getattr(self, field.name)
-            #
-            # if str(value) != str(current_value):
-            #     raise ValueError(
-            #         f"Row {row_num}: {field} has value '{value}' "
-            #         f"but current bundle has '{current_value}'"
-            #     )
+      # # Blank value is allowed
+      # if not self.has_value(value):
+      #     continue
+      #
+      # current_value = getattr(self, field.name)
+      #
+      # if str(value) != str(current_value):
+      #     raise ValueError(
+      #         f"Row {row_num}: {field} has value '{value}' "
+      #         f"but current bundle has '{current_value}'"
+      #     )
+
 
 @dataclass(frozen=True)
 class RecordWrapper:
-    row: dict[Any,Any]
+  row: dict[Any, Any]
 
-    def get_row(self) -> dict[Any,Any]:
-        return self.row
+  def get_row(self) -> dict[Any, Any]:
+    return self.row
 
-    def has(self, field: SchemaField) -> bool:
-        return self.row[field.name]
+  def has(self, field: SchemaField) -> bool:
+    return self.row[field.name]
 
-    def get(self, field: SchemaField) -> Any:
-        return self.row[field.name]
+  def get(self, field: SchemaField) -> Any:
+    return self.row[field.name]
 
-    def is_empty(self):
-        return all(cell is None or str(cell).strip() == "" for cell in self.row)
+  def is_empty(self):
+    return all(cell is None or str(cell).strip() == "" for cell in self.row)
 
-    def assert_field_exists_or_is_not_required(self, row_num, field):
-        if not self.has(field) and field.type == FieldType.REQUIRED:
-            raise ValueError(f"Missing required {field.name} at row {row_num}")
+  def assert_field_exists_or_is_not_required(self, row_num, field):
+    if not self.has(field) and field.type == FieldType.REQUIRED:
+      raise ValueError(f"Missing required {field.name} at row {row_num}")
 
-    def assert_field_numeric(self, row_num, field):
-        self.assert_field_exists_or_is_not_required(row_num, field)
+  def assert_field_numeric(self, row_num, field):
+    self.assert_field_exists_or_is_not_required(row_num, field)
 
-        val = str(self.get(field))
+    val = str(self.get(field))
 
-        if val is not None:
-            # print(row_num, field, val)
-            if not val.isnumeric():
-                raise ValueError(f"at row {row_num} - {field.name}({val}) is not numeric")
+    if val is not None:
+      # print(row_num, field, val)
+      if not val.isnumeric():
+        raise ValueError(f"at row {row_num} - {field.name}({val}) is not numeric")
 
-            if int(val) < 1:
-                raise ValueError(f"at row {row_num} - {field.name}({val}) must be greater than zero")
+      if int(val) < 1:
+        raise ValueError(f"at row {row_num} - {field.name}({val}) must be greater than zero")
+
 
 @dataclass(frozen=True)
 class Schema(ABC):
-    name: str
-    fields: list[SchemaField]
-    entities: list[Any] = field(default_factory=list)
+  name: str
+  fields: list[SchemaField]
+  entities: list[Any] = field(default_factory=list)
 
-    def process_work_book(self, filename) -> Schema:
-        with closing(load_workbook(filename, read_only=True)) as work_book:
-            return self.process_worksheet(work_book.active)
+  def process_work_book(self, filename) -> Schema:
+    with closing(load_workbook(filename, read_only=True)) as work_book:
+      return self.process_worksheet(work_book.active)
 
-    @abstractmethod
-    def process_worksheet(self, work_sheet) -> Schema:
-        pass
+  @abstractmethod
+  def process_worksheet(self, work_sheet) -> Schema:
+    pass
 
-    @abstractmethod
-    def process_entities(self) -> XMLBuilder:
-        pass
+  @abstractmethod
+  def process_entity_list(self, data: list[Any]) -> str:
+    pass
 
-    @staticmethod
-    def row_is_empty(row):
-        return all(cell is None or str(cell).strip() == "" for cell in row)
+  def process_entities(self) -> str:
+    return self.process_entity_list(self.entities)
 
-    @staticmethod
-    def has_value(value):
-        return value is not None and str(value).strip() != ""
+  # def process_entity_groups(self, size:int) -> list[str]:
+  #     chunks = list(batched(self.entities, size))
+  #
+  #     return list(
+  #         chain.from_iterable(
+  #             self.process_entity_list(chunk)
+  #             for chunk in chunks
+  #         )
+  #     )
 
-    def get_required_fields(self):
-        return [f for f in self.fields if f.type.is_required()]
+  def process_entity_groups(self, size: int) -> list[str]:
 
-    def get_required_field_names(self):
-        return [f.name for f in self.fields if f.type.is_required()]
+    chunks = [self.entities[i:i + size] for i in range(0, len(self.entities), size)]
 
-    def get_field_names(self):
-        return [f.name for f in self.fields]
+    results = []
 
-    def validate_sheet(self, sheet):
+    for chunk in chunks:
+      text = self.process_entity_list(chunk)
+      results.append(text)
 
-        raw_headers = next(sheet.iter_rows(min_row=1, max_row=1, values_only=True))
+    return results
 
-        parsed_headers = []
+  @staticmethod
+  def row_is_empty(row):
+    return all(cell is None or str(cell).strip() == "" for cell in row)
 
-        for col_num, header in enumerate(raw_headers, start=1):
-            if header is None or str(header).strip() == "":
-                raise ValueError(f"Unnamed header found in column {col_num}")
+  @staticmethod
+  def has_value(value):
+    return value is not None and str(value).strip() != ""
 
-            parsed_headers.append(str(header).strip())
+  def get_required_fields(self):
+    return [f for f in self.fields if f.type.is_required()]
 
-        # Check for duplicates
-        duplicates = {h for h in parsed_headers if parsed_headers.count(h) > 1}
-        if duplicates:
-            raise ValueError(f"Duplicate headers found: {sorted(duplicates)}")
+  def get_required_field_names(self):
+    return [f.name for f in self.fields if f.type.is_required()]
 
-        # Check expected vs actual
-        actual_fields = set(parsed_headers)
+  def get_field_names(self):
+    return [f.name for f in self.fields]
 
-        all_fields = set(self.get_field_names())
+  def validate_sheet(self, sheet):
 
-        missing = all_fields - actual_fields
-        if missing:
-            raise ValueError(f"Missing columns: {sorted(missing)}")
+    raw_headers = next(sheet.iter_rows(min_row=1, max_row=1, values_only=True))
 
-        extra = actual_fields - all_fields
-        if extra:
-            raise ValueError(f"Unexpected columns: {sorted(extra)}")
+    parsed_headers = []
 
-        return parsed_headers
+    for col_num, header in enumerate(raw_headers, start=1):
+      if header is None or str(header).strip() == "":
+        raise ValueError(f"Unnamed header found in column {col_num}")
 
-    def validate_required_fields(self, record, row_num):
-        missing = [
-            field.name
-            for field in self.get_required_fields()
-            if not Schema.has_value(record.get(field.name)) and field.type == FieldType.REQUIRED
-        ]
+      parsed_headers.append(str(header).strip())
 
-        if missing:
-            raise ValueError(f"Missing required field(s) at row {row_num}: {', '.join(missing)}")
+    # Check for duplicates
+    duplicates = {h for h in parsed_headers if parsed_headers.count(h) > 1}
+    if duplicates:
+      raise ValueError(f"Duplicate headers found: {sorted(duplicates)}")
 
-    def create_entity_with_required_fields(self, record, row_num) -> SchemaEntity:
-        self.validate_required_fields(record, row_num)
+    # Check expected vs actual
+    actual_fields = set(parsed_headers)
 
-        create_dict = lambda keys: {k: record[k] for k in keys }
+    all_fields = set(self.get_field_names())
 
-        return SchemaEntity(
-            schema=self,
-            fields = create_dict(self.get_required_field_names()))
+    missing = all_fields - actual_fields
+    if missing:
+      raise ValueError(f"Missing columns: {sorted(missing)}")
 
-    def create_entity_with_all_fields(self, record, row_num) -> SchemaEntity:
-        self.validate_required_fields(record, row_num)
+    extra = actual_fields - all_fields
+    if extra:
+      raise ValueError(f"Unexpected columns: {sorted(extra)}")
 
-        create_dict = lambda keys: {k: record[k] for k in keys }
+    return parsed_headers
 
-        return SchemaEntity(
-            schema=self,
-            fields = create_dict(self.get_field_names()))
+  def validate_required_fields(self, record, row_num):
+    missing = [
+      field.name
+      for field in self.get_required_fields()
+      if not Schema.has_value(record.get(field.name)) and field.type == FieldType.REQUIRED
+    ]
+
+    if missing:
+      raise ValueError(f"Missing required field(s) at row {row_num}: {', '.join(missing)}")
+
+  def create_entity_with_required_fields(self, record, row_num) -> SchemaEntity:
+    self.validate_required_fields(record, row_num)
+
+    create_dict = lambda keys: {k: record[k] for k in keys}
+
+    return SchemaEntity(
+      schema=self,
+      fields=create_dict(self.get_required_field_names())
+    )
+
+  def create_entity_with_all_fields(self, record, row_num) -> SchemaEntity:
+    self.validate_required_fields(record, row_num)
+
+    create_dict = lambda keys: {k: record[k] for k in keys}
+
+    return SchemaEntity(
+      schema=self,
+      fields=create_dict(self.get_field_names())
+    )
